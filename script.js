@@ -356,7 +356,7 @@ function attemptGlobalValidation() {
     const isFlorentOk = (userInput.toLowerCase() === "florent");
     
     if (!isFlorentOk && isRecaptchaChecked) {
-        errorMsgSpan.innerText = "❌ Ayyiii c'est quoi ce mongole";
+        errorMsgSpan.innerText = "❌ Ayyiii c'est quoi ce mongol";
         return false;
     }
     if (isFlorentOk && !isRecaptchaChecked) {
