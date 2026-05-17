@@ -203,7 +203,7 @@ let gridItems = [];
 function updateGridPrompt() {
     const promptDiv = document.querySelector(".grid-prompt p");
     if (promptDiv) {
-        promptDiv.innerHTML = `Sélectionnez les carrés où <strong style="color:#8effd4;">y'a un BG</strong>`;
+        promptDiv.innerHTML = `Sélectionnez les carrés où <strong style="color:#8effd4;">y'a le Tigre</strong>`;
     }
 }
 
