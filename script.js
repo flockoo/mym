@@ -2,7 +2,7 @@
 const MY_PHOTO_URL = "moi.jpg";  
 const GRID_SIZE = 4;  
 const TOTAL_CELLS = GRID_SIZE * GRID_SIZE;
-const CORRECT_POSITIONS = [5, 6, 9, 10];  
+const CORRECT_POSITIONS = [6, 7, 9, 10, 11, 13, 14, 15];  
 
 // ---------- CANVAS BACKGROUND ----------
 const canvas = document.getElementById("bgCanvas");
