@@ -1,6 +1,6 @@
 // FICHIER: script.js
 // Configuration: remplacez cette image par le chemin VOTRE PHOTO
-const MY_PHOTO_URL = "IMG_2861.CR3.jpg";  // <--- METS ICI LE CHEMIN DE TA PHOTO !
+const MY_PHOTO_URL = "IMG_2861.CR3";  // <--- METS ICI LE CHEMIN DE TA PHOTO !
 // Si tu n'as pas encore l'image, utilise une image placeholder temporaire:
 // const MY_PHOTO_URL = "https://picsum.photos/id/64/200/200"; (exemple)
 
