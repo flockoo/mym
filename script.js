@@ -1,8 +1,9 @@
 // FICHIER: script.js
-const MY_PHOTO_URL = "moi.jpg";  
-const GRID_SIZE = 4;  
+
+const MY_PHOTO_URL = "moi.jpg";
+const GRID_SIZE = 4;
 const TOTAL_CELLS = GRID_SIZE * GRID_SIZE;
-const CORRECT_POSITIONS = [6, 7, 9, 10, 11, 13, 14, 15];  
+const CORRECT_POSITIONS = [6, 7, 9, 10, 11, 13, 14, 15];
 
 // ---------- CANVAS BACKGROUND ----------
 const canvas = document.getElementById("bgCanvas");
@@ -111,54 +112,55 @@ const gridError = document.getElementById("gridError");
 let selectedCells = new Set();
 let gridItems = [];
 
+// Afficher combien de cases sont attendues (pour l'utilisateur)
+function updateGridPrompt() {
+    const promptDiv = document.querySelector(".grid-prompt p");
+    if (promptDiv) {
+        promptDiv.innerHTML = `Sélectionnez tous les carrés où <strong style="color:#8effd4;">apparaît MA PHOTO</strong> <span style="font-size:0.7rem;">(${CORRECT_POSITIONS.length} case(s) à sélectionner)</span>`;
+    }
+}
+
 // Fonction pour charger l'image
 function loadImage() {
     return new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => resolve(img);
-        img.onerror = () => reject(new Error("Impossible de charger l'image"));
+        img.onerror = () => reject(new Error("Impossible de charger l'image: " + MY_PHOTO_URL));
         img.src = MY_PHOTO_URL;
     });
 }
 
-// Découpe l'image et crée les cellules (version corrigée sans déformation)
+// Découpe l'image et crée les cellules
 async function generateGridFromPhoto() {
     imageGrid.innerHTML = "";
     selectedCells.clear();
     gridItems = [];
     
-    // Style optimisé pour la grille - espacement réduit
+    // Style optimisé pour la grille
     imageGrid.style.display = "grid";
     imageGrid.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 1fr)`;
-    imageGrid.style.gap = "4px";  // Espacement réduit entre les cases
+    imageGrid.style.gap = "4px";
     imageGrid.style.margin = "20px auto";
-    imageGrid.style.maxWidth = "450px";  // Taille maximale de la grille
-    imageGrid.style.aspectRatio = "1 / 1";  // La grille reste carrée
+    imageGrid.style.maxWidth = "450px";
+    imageGrid.style.aspectRatio = "1 / 1";
     
     try {
         const img = await loadImage();
         
-        // Calcul des dimensions pour un découpage parfait sans déformation
-        // On prend la plus petite dimension pour garder un carré parfait
+        // Calcul pour un découpage carré centré
         const imgSize = Math.min(img.width, img.height);
         const cropX = (img.width - imgSize) / 2;
         const cropY = (img.height - imgSize) / 2;
-        
         const cellSize = imgSize / GRID_SIZE;
         
-        // Créer un canvas temporaire pour découper
         const tempCanvas = document.createElement("canvas");
         const tempCtx = tempCanvas.getContext("2d");
-        
-        // Définir une taille de cellule fixe pour l'affichage
-        const displayCellSize = 100; // pixels
         
         for (let row = 0; row < GRID_SIZE; row++) {
             for (let col = 0; col < GRID_SIZE; col++) {
                 const index = row * GRID_SIZE + col;
                 const isCorrect = CORRECT_POSITIONS.includes(index);
                 
-                // Découper le morceau depuis la partie centrée de l'image
                 tempCanvas.width = cellSize;
                 tempCanvas.height = cellSize;
                 tempCtx.drawImage(
@@ -167,11 +169,10 @@ async function generateGridFromPhoto() {
                     0, 0, cellSize, cellSize
                 );
                 
-                // Créer l'élément de la grille avec une taille fixe
                 const cellDiv = document.createElement("div");
                 cellDiv.className = "grid-item";
                 cellDiv.dataset.index = index;
-                cellDiv.style.aspectRatio = "1 / 1";  // Cases carrées
+                cellDiv.style.aspectRatio = "1 / 1";
                 cellDiv.style.cursor = "pointer";
                 cellDiv.style.borderRadius = "8px";
                 cellDiv.style.overflow = "hidden";
@@ -181,7 +182,7 @@ async function generateGridFromPhoto() {
                 cellImg.alt = isCorrect ? "Moi" : "Autre";
                 cellImg.style.width = "100%";
                 cellImg.style.height = "100%";
-                cellImg.style.objectFit = "cover";  // L'image remplit la case sans déformation
+                cellImg.style.objectFit = "cover";
                 
                 cellDiv.appendChild(cellImg);
                 cellDiv.addEventListener("click", () => toggleSelect(index, cellDiv));
@@ -189,9 +190,10 @@ async function generateGridFromPhoto() {
                 gridItems.push(cellDiv);
             }
         }
+        updateGridPrompt();
     } catch (error) {
         console.error("Erreur:", error);
-        // Fallback
+        // Fallback avec des carrés colorés
         for (let i = 0; i < TOTAL_CELLS; i++) {
             const isCorrect = CORRECT_POSITIONS.includes(i);
             const cellDiv = document.createElement("div");
@@ -210,7 +212,8 @@ async function generateGridFromPhoto() {
             imageGrid.appendChild(cellDiv);
             gridItems.push(cellDiv);
         }
-        gridError.innerText = "⚠️ Placez votre photo dans assets/moi.jpg";
+        gridError.innerText = "⚠️ Photo 'moi.jpg' introuvable. Placez-la à la racine du dossier.";
+        updateGridPrompt();
     }
 }
 
@@ -219,19 +222,32 @@ function toggleSelect(index, element) {
         selectedCells.delete(index);
         element.classList.remove("selected");
     } else {
+        // On peut limiter la sélection au nombre de cases attendues (optionnel)
+        // if (selectedCells.size >= CORRECT_POSITIONS.length && !CORRECT_POSITIONS.includes(index)) {
+        //     gridError.innerText = `⚠️ Vous devez sélectionner exactement ${CORRECT_POSITIONS.length} cases.`;
+        //     return;
+        // }
         selectedCells.add(index);
         element.classList.add("selected");
     }
+    // Efface l'erreur quand l'utilisateur modifie sa sélection
+    gridError.innerText = "";
 }
 
 function verifyGridSelection() {
     const selectedArray = Array.from(selectedCells).sort((a,b)=>a-b);
     const expected = [...CORRECT_POSITIONS].sort((a,b)=>a-b);
     
-    if (selectedArray.length !== expected.length || !selectedArray.every((val, idx) => val === expected[idx])) {
-        gridError.innerText = `❌ Sélection incorrecte ! Choisissez les ${expected.length} carré(s) où JE APPARAIS.`;
+    if (selectedArray.length !== expected.length) {
+        gridError.innerText = `❌ Sélection incorrecte ! Vous avez sélectionné ${selectedArray.length} case(s) au lieu de ${expected.length}.`;
         return false;
     }
+    
+    if (!selectedArray.every((val, idx) => val === expected[idx])) {
+        gridError.innerText = `❌ Sélection incorrecte ! Ce ne sont pas les bonnes cases. Recliquez sur celles où APPARAÎT MA PHOTO.`;
+        return false;
+    }
+    
     gridError.innerText = "✓ Parfait ! Humanité confirmée !";
     return true;
 }
