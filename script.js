@@ -1,4 +1,4 @@
-// FICHIER: script.js
+// FICHIER: script.js (version finale avec redirection Insta)
 // Configuration
 const MY_PHOTO_URL = "moi.jpg";
 const GRID_SIZE = 4;
@@ -104,6 +104,7 @@ const checkIcon = document.getElementById("recaptchaCheckIcon");
 const verifyMsgSpan = document.getElementById("recaptchaVerifyMsg");
 let isRecaptchaChecked = false;
 let waitingForValidation = false;
+let redirectTimeout = null;
 
 // Création du Captcha déformé sur canvas
 function drawWobblyCaptcha() {
@@ -113,15 +114,12 @@ function drawWobblyCaptcha() {
     const ctxCaptcha = canvasCaptcha.getContext("2d");
     const text = "FLORENT";
     
-    // Dimensions du canvas
     canvasCaptcha.width = 350;
     canvasCaptcha.height = 100;
     
-    // Fond sale / bruité
     ctxCaptcha.fillStyle = "#0a0f15";
     ctxCaptcha.fillRect(0, 0, canvasCaptcha.width, canvasCaptcha.height);
     
-    // Ajout de bruit (pixels aléatoires)
     for (let i = 0; i < 300; i++) {
         ctxCaptcha.fillStyle = `rgba(100, 255, 180, ${Math.random() * 0.3})`;
         ctxCaptcha.fillRect(
@@ -132,7 +130,6 @@ function drawWobblyCaptcha() {
         );
     }
     
-    // Lignes parasites
     ctxCaptcha.beginPath();
     for (let i = 0; i < 8; i++) {
         ctxCaptcha.moveTo(Math.random() * canvasCaptcha.width, Math.random() * canvasCaptcha.height);
@@ -142,7 +139,6 @@ function drawWobblyCaptcha() {
         ctxCaptcha.stroke();
     }
     
-    // Dessiner chaque lettre avec déformation individuelle
     const letters = text.split('');
     let x = 30;
     const y = 65;
@@ -151,24 +147,19 @@ function drawWobblyCaptcha() {
     letters.forEach((letter, index) => {
         ctxCaptcha.save();
         
-        // Déformation individuelle par lettre
         const skewY = Math.sin(timeWobble + index * 0.8) * 0.5;
         const skewX = Math.cos(timeWobble + index * 0.6) * 0.3;
         const rotate = Math.sin(timeWobble + index) * 0.08;
         const scaleY = 1 + Math.sin(timeWobble * 1.3 + index) * 0.05;
-        
-        // Position avec variation
         const xOffset = Math.sin(timeWobble * 1.5 + index) * 3;
         
         ctxCaptcha.translate(x + xOffset, y);
         ctxCaptcha.rotate(rotate);
         ctxCaptcha.transform(1, skewY, skewX, scaleY, 0, 0);
         
-        // Ombre pour effet "sale"
         ctxCaptcha.shadowColor = "rgba(0, 255, 170, 0.3)";
         ctxCaptcha.shadowBlur = 2;
         
-        // Dégradé de couleur
         const hue = 55 + Math.sin(timeWobble * 2 + index) * 15;
         ctxCaptcha.fillStyle = `hsl(${hue}, 85%, 60%)`;
         ctxCaptcha.font = `bold ${42 + Math.sin(timeWobble + index) * 4}px "Courier New", monospace`;
@@ -176,7 +167,6 @@ function drawWobblyCaptcha() {
         ctxCaptcha.textBaseline = "middle";
         ctxCaptcha.fillText(letter, 0, 0);
         
-        // Contour pour effet "glitch"
         ctxCaptcha.shadowBlur = 0;
         ctxCaptcha.strokeStyle = `rgba(0, 255, 170, 0.5)`;
         ctxCaptcha.lineWidth = 0.5;
@@ -184,11 +174,9 @@ function drawWobblyCaptcha() {
         
         ctxCaptcha.restore();
         
-        // Largeur approximative
         x += 38;
     });
     
-    // Ajouter des lignes courbes par-dessus
     ctxCaptcha.beginPath();
     for (let i = 0; i < 3; i++) {
         ctxCaptcha.moveTo(20, 30 + i * 20);
@@ -203,7 +191,6 @@ function drawWobblyCaptcha() {
         ctxCaptcha.stroke();
     }
     
-    // Appeler l'animation
     requestAnimationFrame(() => drawWobblyCaptcha());
 }
 
@@ -217,7 +204,7 @@ let gridItems = [];
 function updateGridPrompt() {
     const promptDiv = document.querySelector(".grid-prompt p");
     if (promptDiv) {
-        promptDiv.innerHTML = `Sélectionnez les carrés où <strong style="color:#8effd4;">y'a un BG</strong> <span style="font-size:0.7rem;"></span>`;
+        promptDiv.innerHTML = `Sélectionnez les carrés où <strong style="color:#8effd4;">y'a un BG</strong>`;
     }
 }
 
@@ -341,14 +328,55 @@ function verifyGridSelection() {
     return true;
 }
 
+// NOUVELLE ÉTAPE 3 : ZGEG CONFIRMÉ + REDIRECTION INSTA
 function goToStep3() {
     step2Div.classList.add("hidden");
     step3Div.classList.remove("hidden");
     updateDots(3);
-    const welcomeSpan = document.getElementById("welcomeText");
-    if (welcomeSpan) welcomeSpan.innerHTML = "Bienvenue, Florent ✨";
-    const humanIconSpan = document.getElementById("humanIcon");
-    if (humanIconSpan) humanIconSpan.innerHTML = "🧠🫀";
+    
+    // On vide l'ancien contenu et on met le gros ZGEG
+    const finalMessage = document.querySelector("#step3 .final-message");
+    if (finalMessage) {
+        finalMessage.innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+                <div style="font-size: 4rem; font-weight: bold; letter-spacing: 8px; color: #2effb0; text-shadow: 0 0 20px #00ffaa; animation: pulse 0.5s infinite alternate;">
+                    ZGEG
+                </div>
+                <div style="font-size: 3rem; font-weight: bold; letter-spacing: 4px; color: #ffd966; text-shadow: 0 0 15px #ffb347; margin-top: 10px;">
+                    CONFIRMÉ
+                </div>
+                <div style="margin-top: 30px; font-size: 0.9rem; opacity: 0.8;">
+                    ✅ Humanité vérifiée avec succès
+                </div>
+                <div style="margin-top: 20px; font-size: 0.7rem; color: #88ffcc;">
+                    Redirection vers Instagram dans <span id="countdown">3</span> secondes...
+                </div>
+            </div>
+        `;
+    }
+    
+    // Animation pulse
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes pulse {
+            0% { transform: scale(1); text-shadow: 0 0 20px #00ffaa; }
+            100% { transform: scale(1.05); text-shadow: 0 0 40px #2effb0; }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Compte à rebours et redirection
+    let seconds = 3;
+    const countdownElement = document.getElementById("countdown");
+    
+    const interval = setInterval(() => {
+        seconds--;
+        if (countdownElement) countdownElement.innerText = seconds;
+        if (seconds <= 0) {
+            clearInterval(interval);
+            window.location.href = "https://www.instagram.com/florent_brds/";
+        }
+    }, 1000);
 }
 
 function attemptGlobalValidation() {
@@ -477,10 +505,22 @@ function fullReset() {
     selectedCells.clear();
     step1Div.classList.remove("hidden");
     step2Div.classList.add("hidden");
-    step3Div.classList.add("hidden");
+    step3Div.classList.remove("hidden"); // On remet la step3 pour le reset mais on restaure son contenu original
     updateDots(1);
     kaptchaInput.focus();
     gridError.innerText = "";
+    
+    // Restaurer le contenu original de l'étape 3
+    const finalMessage = document.querySelector("#step3 .final-message");
+    if (finalMessage) {
+        finalMessage.innerHTML = `
+            <div class="human-badge" id="humanIcon">🧬✨</div>
+            <div id="welcomeText" style="font-size:1.3rem; font-weight:bold; margin:12px 0;">Bienvenue, Florent</div>
+            <p style="font-size:0.8rem; opacity:0.9;">Vous avez prouvé votre essence humaine.<br>Ce n'est pas un robot, c'est VOUS.</p>
+            <div style="margin: 20px 0; font-size:0.75rem; background:#0e1e18; border-radius:60px; padding:8px;">✅ accès neuronal accordé</div>
+        `;
+    }
+    step3Div.classList.add("hidden");
 }
 
 resetBtn.addEventListener("click", fullReset);
