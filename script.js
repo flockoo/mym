@@ -1,14 +1,21 @@
 // FICHIER: script.js
-// Configuration: remplacez cette image par le chemin VOTRE PHOTO
-const MY_PHOTO_URL = "moi.jpg";  // <--- METS ICI LE CHEMIN DE TA PHOTO !
-// Si tu n'as pas encore l'image, utilise une image placeholder temporaire:
+// Configuration - METS ICI LE CHEMIN DE TA PHOTO !
+const MY_PHOTO_URL = "moi.jpg";  // <--- TA PHOTO ICI
+
+// Configuration de la grille (4x4 = 16 cases)
+const GRID_SIZE = 4;  // 4x4 grid
+const TOTAL_CELLS = GRID_SIZE * GRID_SIZE; // 16
+
+// Définis quelles cases contiennent TA TÊTE / VISAGE (toi)
+// Par défaut: les cases centrales (exemple pour une photo centrée)
+// Tu peux ajuster ces indices (0 à 15) selon où tu apparais sur ta photo
+// Case 0 = en haut à gauche, case 15 = en bas à droite
+const CORRECT_POSITIONS = [5, 6, 9, 10];  // zone centrale 2x2
 
 
-// Position des images contenant ma photo dans la grille 3x3 (0 à 8)
 
-const CORRECT_POSITIONS = [0,1,2];
 
-// ---------- CANVAS BACKGROUND ----------
+// ---------- CANVAS BACKGROUND (inchangé) ----------
 const canvas = document.getElementById("bgCanvas");
 const ctx = canvas.getContext("2d");
 let width, height;
@@ -108,39 +115,94 @@ const verifyMsgSpan = document.getElementById("recaptchaVerifyMsg");
 let isRecaptchaChecked = false;
 let waitingForValidation = false;
 
-// Grille étape 2
+// Grille étape 2 (photo découpée)
 const imageGrid = document.getElementById("imageGrid");
 const verifyGridBtn = document.getElementById("verifyGridBtn");
 const gridError = document.getElementById("gridError");
-let selectedCells = new Set(); // stocke les indices sélectionnés
+let selectedCells = new Set();
 let gridItems = [];
 
-// Génération des images pour la grille 3x3
-function generateGridImages() {
+// Fonction pour charger une image et la découper en grille
+function loadAndSplitImage() {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "Anonymous"; // pour éviter les problèmes CORS avec certaines images
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error("Impossible de charger l'image"));
+        img.src = MY_PHOTO_URL;
+    });
+}
+
+// Découpe l'image et crée les cellules de la grille
+async function generateGridFromPhoto() {
     imageGrid.innerHTML = "";
     selectedCells.clear();
     gridItems = [];
-    // 9 images: certaines sont MOI, d'autres sont des images randoms (sujets divers)
-    for (let i = 0; i < 9; i++) {
-        const isMe = CORRECT_POSITIONS.includes(i);
-        const imgUrl = isMe ? MY_PHOTO_URL : `https://picsum.photos/id/${100 + i * 7}/200/200?random=${i}`;
-        const div = document.createElement("div");
-        div.className = "grid-item";
-        div.dataset.index = i;
-        const img = document.createElement("img");
-        img.src = imgUrl;
-        img.alt = isMe ? "Moi" : "Autre";
-        // Gestion erreur de chargement image perso
-        if (isMe) {
-            img.onerror = () => {
-                img.src = "https://picsum.photos/id/42/200/200"; // fallback
-                console.warn("Photo non trouvée, remplacement par image aléatoire");
-            };
+    
+    // Style dynamique pour la grille
+    imageGrid.style.display = "grid";
+    imageGrid.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 1fr)`;
+    imageGrid.style.gap = "8px";
+    imageGrid.style.margin = "20px 0";
+    
+    try {
+        const img = await loadAndSplitImage();
+        const cellWidth = img.width / GRID_SIZE;
+        const cellHeight = img.height / GRID_SIZE;
+        
+        // Créer un canvas temporaire pour découper
+        const tempCanvas = document.createElement("canvas");
+        const tempCtx = tempCanvas.getContext("2d");
+        
+        for (let row = 0; row < GRID_SIZE; row++) {
+            for (let col = 0; col < GRID_SIZE; col++) {
+                const index = row * GRID_SIZE + col;
+                const isCorrect = CORRECT_POSITIONS.includes(index);
+                
+                // Découper le morceau
+                tempCanvas.width = cellWidth;
+                tempCanvas.height = cellHeight;
+                tempCtx.drawImage(
+                    img,
+                    col * cellWidth, row * cellHeight, cellWidth, cellHeight,
+                    0, 0, cellWidth, cellHeight
+                );
+                
+                // Créer l'élément de la grille
+                const cellDiv = document.createElement("div");
+                cellDiv.className = "grid-item";
+                cellDiv.dataset.index = index;
+                
+                const cellImg = document.createElement("img");
+                cellImg.src = tempCanvas.toDataURL();
+                cellImg.alt = isCorrect ? "Moi" : "Autre";
+                
+                cellDiv.appendChild(cellImg);
+                cellDiv.addEventListener("click", () => toggleSelect(index, cellDiv));
+                imageGrid.appendChild(cellDiv);
+                gridItems.push(cellDiv);
+            }
         }
-        div.appendChild(img);
-        div.addEventListener("click", () => toggleSelect(i, div));
-        imageGrid.appendChild(div);
-        gridItems.push(div);
+    } catch (error) {
+        console.error("Erreur de chargement de l'image:", error);
+        // Fallback: générer des carrés colorés avec message d'erreur
+        for (let i = 0; i < TOTAL_CELLS; i++) {
+            const isCorrect = CORRECT_POSITIONS.includes(i);
+            const cellDiv = document.createElement("div");
+            cellDiv.className = "grid-item";
+            cellDiv.dataset.index = i;
+            cellDiv.style.background = isCorrect ? "#2a5f4a" : "#1a1f2a";
+            cellDiv.style.display = "flex";
+            cellDiv.style.alignItems = "center";
+            cellDiv.style.justifyContent = "center";
+            cellDiv.style.color = "#8effd4";
+            cellDiv.style.fontSize = "12px";
+            cellDiv.innerText = isCorrect ? "📷" : "?";
+            cellDiv.addEventListener("click", () => toggleSelect(i, cellDiv));
+            imageGrid.appendChild(cellDiv);
+            gridItems.push(cellDiv);
+        }
+        gridError.innerText = "⚠️ Photo non trouvée - Utilisation d'un aperçu temporaire. Placez votre photo dans assets/moi.jpg";
     }
 }
 
@@ -160,14 +222,14 @@ function verifyGridSelection() {
     const expected = [...CORRECT_POSITIONS].sort((a,b)=>a-b);
     
     if (selectedArray.length !== expected.length || !selectedArray.every((val, idx) => val === expected[idx])) {
-        gridError.innerText = "❌ Sélection incorrecte ! Vous devez choisir TOUS les carrés où apparaît MA PHOTO.";
+        gridError.innerText = `❌ Sélection incorrecte ! Vous devez choisir les ${expected.length} carré(s) où APPARAÎT MON VISAGE.`;
         return false;
     }
-    gridError.innerText = "";
+    gridError.innerText = "✓ Parfait ! Humanité confirmée !";
     return true;
 }
 
-// Passage étape 2 -> étape 3 (succès)
+// Passage étape 2 -> étape 3
 function goToStep3() {
     step2Div.classList.add("hidden");
     step3Div.classList.remove("hidden");
@@ -206,12 +268,12 @@ function attemptGlobalValidation() {
         step1Div.classList.add("hidden");
         step2Div.classList.remove("hidden");
         updateDots(2);
-        generateGridImages(); // génère la grille dynamique
+        generateGridFromPhoto(); // génère la grille découpée
     }, 600);
     return true;
 }
 
-// Écoute des changements + checkbox
+// Écoute des changements
 function checkBothConditions() {
     if (waitingForValidation) return;
     const inputVal = kaptchaInput.value.trim();
@@ -256,7 +318,7 @@ recaptchaBox.addEventListener("click", (e) => {
         setTimeout(() => {
             if (isRecaptchaChecked) {
                 verifyMsgSpan.innerHTML = "✔ vérification humaine effectuée";
-                attemptGlobalValidation(); // retente validation globale
+                attemptGlobalValidation();
             }
         }, 400);
     } else {
@@ -317,7 +379,7 @@ function fullReset() {
 
 resetBtn.addEventListener("click", fullReset);
 
-// Init
+// Initialisation
 updateCheckboxUI();
 updateDots(1);
 kaptchaInput.focus();
