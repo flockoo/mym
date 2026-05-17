@@ -333,7 +333,7 @@ function verifyGridSelection() {
     }
     
     if (!selectedArray.every((val, idx) => val === expected[idx])) {
-        gridError.innerText = `❌ Mauvaises cases. Sélectionnez celles où APPARAÎT MA PHOTO.`;
+        gridError.innerText = `❌ Mauvaises cases.`;
         return false;
     }
     
