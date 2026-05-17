@@ -328,7 +328,7 @@ function verifyGridSelection() {
     const expected = [...CORRECT_POSITIONS].sort((a,b)=>a-b);
     
     if (selectedArray.length !== expected.length) {
-        gridError.innerText = `❌ Sélection incorrecte ! ${selectedArray.length}/${expected.length} cases.`;
+        gridError.innerText = `❌ Fais un effort stp ! ${selectedArray.length}/${expected.length} cases.`;
         return false;
     }
     
