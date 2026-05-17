@@ -90,7 +90,6 @@ body {
     letter-spacing: 1px;
 }
 
-/* Style amélioré pour le Kaptcha "wiggle" */
 .kaptcha-value {
     font-size: 2.2rem;
     font-weight: bold;
@@ -107,7 +106,6 @@ body {
     backdrop-filter: blur(2px);
 }
 
-/* Optionnel : rajouter des lignes parasites façon Kaptcha */
 .kaptcha-prompt {
     position: relative;
     overflow: hidden;
