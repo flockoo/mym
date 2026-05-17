@@ -203,7 +203,7 @@ let gridItems = [];
 function updateGridPrompt() {
     const promptDiv = document.querySelector(".grid-prompt p");
     if (promptDiv) {
-        promptDiv.innerHTML = `Sélectionnez les carrés où <strong style="color:#8effd4;">y'a le Tigre</strong>`;
+        promptDiv.innerHTML = `Sélectionne les carrés où <strong style="color:#8effd4;">y'a le Tigre</strong>`;
     }
 }
 
@@ -338,10 +338,10 @@ function goToStep3() {
         finalMessage.innerHTML = `
             <div style="text-align: center; padding: 20px;">
                 <div style="font-size: 4rem; font-weight: bold; letter-spacing: 8px; color: #2effb0; text-shadow: 0 0 20px #00ffaa; animation: pulse 0.5s infinite alternate;">
-                    C'EST BIEN
+                    FINITO
                 </div>
                 <div style="font-size: 3rem; font-weight: bold; letter-spacing: 4px; color: #2effb0; text-shadow: 0 0 15px #00ffaa; margin-top: 10px;">
-                    ABONNE TOI MAINTENANT
+                    PIPO
                 </div>
                 <div style="margin-top: 30px; font-size: 0.7rem; color: #88ffcc;">
                     Redirection vers mon Onlyfan dans <span id="countdown">5</span> secondes...
