@@ -344,7 +344,7 @@ function goToStep3() {
                     CONFIRMÉ
                 </div>
                 <div style="margin-top: 30px; font-size: 0.7rem; color: #88ffcc;">
-                    Redirection vers mon Onlyfan dans <span id="countdown">3</span> secondes...
+                    Redirection vers mon Onlyfan dans <span id="countdown">5</span> secondes...
                 </div>
             </div>
         `;
@@ -359,7 +359,7 @@ function goToStep3() {
     `;
     document.head.appendChild(style);
     
-    let seconds = 3;
+    let seconds = 5;
     const countdownElement = document.getElementById("countdown");
     
     const interval = setInterval(() => {
@@ -385,7 +385,7 @@ function attemptGlobalValidation() {
         return false;
     }
     if (!isFlorentOk && !isRecaptchaChecked) {
-        errorMsgSpan.innerText = "❌ Recopie le code ci-dessus.";
+        errorMsgSpan.innerText = "❌ Branche le cerveau.";
         return false;
     }
     
