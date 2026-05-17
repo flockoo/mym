@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>human verification</title>
+
+<style>
+html, body{
+    margin:0;
+    overflow:hidden;
+    background:black;
+    font-family:monospace;
+    color:white;
+}
+
+canvas{
+    position:fixed;
+    inset:0;
+}
+
+.center{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    width:340px;
+}
+
+.panel{
+    border:1px solid #222;
+    background:rgba(255,255,255,0.03);
+    padding:24px;
+    backdrop-filter:blur(10px);
+}
+
+.title{
+    font-size:12px;
+    letter-spacing:2px;
+    margin-bottom:20px;
+}
+
+.button{
+    border:1px solid #444;
+    padding:14px;
+    cursor:pointer;
+    transition:0.2s;
+    user-select:none;
+}
+
+.button:hover{
+    background:#111;
+}
+
+.small{
+    margin-top:15px;
+    opacity:0.5;
+    font-size:11px;
+}
+
+.hidden{
+    display:none;
+}
+
+.score{
+    font-size:48px;
+    margin:20px 0;
+}
+
+.glitch{
+    animation:glitch 0.15s infinite;
+}
+
+@keyframes glitch{
+    0%{transform:translate(0px);}
+    25%{transform:translate(-2px,1px);}
+    50%{transform:translate(2px,-1px);}
+    75%{transform:translate(-1px,-2px);}
+    100%{transform:translate(0px);}
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="c"></canvas>
+
+<div class="center">
+
+    <div class="panel" id="startPanel">
+        <div class="title">
+            HUMAN VERIFICATION REQUIRED
+        </div>
+
+        <div class="button" onclick="startVerification()">
+            [ I AM NOT A ROBOT ]
+        </div>
+
+        <div class="small">
+            biometric imagination scanner enabled
+        </div>
+    </div>
+
+    <div class="panel hidden" id="scanPanel">
+        <div class="title glitch">
+            SCANNING HUMANITY...
+        </div>
+
+        <div class="score" id="score">
+            0%
+        </div>
+
+        <div class="small" id="analysis">
+            analyzing emotional residue...
+        </div>
+    </div>
+
+</div>
+
+<script>
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+
+let w,h;
+
+function resize(){
+    w = canvas.width = innerWidth;
+    h = canvas.height = innerHeight;
+}
+
+addEventListener("resize", resize);
+resize();
+
+let mouse = {
+    x:w/2,
+    y:h/2
+};
+
+addEventListener("mousemove", e=>{
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+});
+
+let t = 0;
+
+function draw(){
+
+    ctx.fillStyle = "rgba(0,0,0,0.08)";
+    ctx.fillRect(0,0,w,h);
+
+    for(let i=0;i<120;i++){
+
+        let angle = i*0.15 + t*0.01;
+
+        let radius =
+            150 +
+            Math.sin(i*0.5+t*0.02)*40;
+
+        let x =
+            mouse.x +
+            Math.cos(angle)*radius;
+
+        let y =
+            mouse.y +
+            Math.sin(angle)*radius;
+
+        ctx.beginPath();
+        ctx.arc(x,y,1.8,0,Math.PI*2);
+
+        ctx.fillStyle =
+            `hsl(${i*4+t},100%,60%)`;
+
+        ctx.fill();
+    }
+
+    t++;
+
+    requestAnimationFrame(draw);
+}
+
+draw();
+
+const messages = [
+    "detecting internet soul...",
+    "measuring curiosity...",
+    "checking meme history...",
+    "analyzing emotional residue...",
+    "verifying late night thoughts...",
+    "scanning digital aura...",
+    "testing humanity levels...",
+    "checking existential instability...",
+    "reading browser fingerprints...",
+    "calculating weirdness factor..."
+];
+
+function random(min,max){
+    return Math.floor(Math.random()*(max-min+1))+min;
+}
+
+function startVerification(){
+
+    document
+        .getElementById("startPanel")
+        .classList.add("hidden");
+
+    document
+        .getElementById("scanPanel")
+        .classList.remove("hidden");
+
+    let score = 0;
+
+    const finalScore = random(72, 99);
+
+    const scoreElement =
+        document.getElementById("score");
+
+    const analysis =
+        document.getElementById("analysis");
+
+    const interval = setInterval(()=>{
+
+        score += random(1,4);
+
+        if(score >= finalScore){
+            score = finalScore;
+
+            clearInterval(interval);
+
+            setTimeout(()=>{
+
+                analysis.innerHTML =
+                    "human verified.";
+
+                document
+                    .querySelector(".title")
+                    .classList.remove("glitch");
+
+            },500);
+
+        }
+
+        scoreElement.innerHTML =
+            score + "%";
+
+        analysis.innerHTML =
+            messages[
+                random(0,messages.length-1)
+            ];
+
+    },80);
+
+}
+</script>
+
+</body>
+</html>
