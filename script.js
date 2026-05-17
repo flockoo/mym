@@ -217,7 +217,7 @@ let gridItems = [];
 function updateGridPrompt() {
     const promptDiv = document.querySelector(".grid-prompt p");
     if (promptDiv) {
-        promptDiv.innerHTML = `Sélectionnez tous les carrés où <strong style="color:#8effd4;">apparaît MA PHOTO</strong> <span style="font-size:0.7rem;">(${CORRECT_POSITIONS.length} case(s) à sélectionner)</span>`;
+        promptDiv.innerHTML = `Sélectionnez les carrés où <strong style="color:#8effd4;">y'a un BG</strong> <span style="font-size:0.7rem;"></span>`;
     }
 }
 
@@ -356,7 +356,7 @@ function attemptGlobalValidation() {
     const isFlorentOk = (userInput.toLowerCase() === "florent");
     
     if (!isFlorentOk && isRecaptchaChecked) {
-        errorMsgSpan.innerText = "❌ Le code visuel est incorrect.";
+        errorMsgSpan.innerText = "❌ Ayyiii c'est quoi ce mongole";
         return false;
     }
     if (isFlorentOk && !isRecaptchaChecked) {
@@ -391,9 +391,9 @@ function checkBothConditions() {
         attemptGlobalValidation();
     } else {
         if (inputOk && !isRecaptchaChecked) {
-            errorMsgSpan.innerText = "✔ Code correct ! Cochez la case.";
+            errorMsgSpan.innerText = "✔ Bon toutou.";
         } else if (!inputOk && isRecaptchaChecked) {
-            errorMsgSpan.innerText = "✔ Case cochée, recopiez 'FLORENT'.";
+            errorMsgSpan.innerText = "recopie 'FLORENT' cogno.";
         } else {
             if (!waitingForValidation) errorMsgSpan.innerText = "";
         }
