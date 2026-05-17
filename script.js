@@ -1,4 +1,4 @@
-// FICHIER: script.js (version finale - ZGEG CONFIRMÉ + redirection Insta)
+// FICHIER: script.js 
 // Configuration
 const MY_PHOTO_URL = "moi.jpg";
 const GRID_SIZE = 4;
