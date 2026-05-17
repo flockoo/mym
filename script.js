@@ -360,11 +360,11 @@ function attemptGlobalValidation() {
         return false;
     }
     if (isFlorentOk && !isRecaptchaChecked) {
-        errorMsgSpan.innerText = "❌ Cochez « I'm not a robot ».";
+        errorMsgSpan.innerText = "❌ Coche « I'm not a robot ».";
         return false;
     }
     if (!isFlorentOk && !isRecaptchaChecked) {
-        errorMsgSpan.innerText = "❌ Recopiez le code ci-dessus.";
+        errorMsgSpan.innerText = "❌ Recopie le code ci-dessus.";
         return false;
     }
     
