@@ -226,14 +226,15 @@ body {
     margin: 20px 0;
 }
 
+/* Ajoute ou remplace dans style.css */
 .grid-item {
     aspect-ratio: 1 / 1;
     background: #0a1217;
-    border-radius: 16px;
+    border-radius: 8px;
     overflow: hidden;
     cursor: pointer;
-    border: 3px solid #2a5f4a;
-    transition: all 0.2s;
+    border: 2px solid #2a5f4a;  /* Bordure plus fine */
+    transition: all 0.15s ease;
     position: relative;
 }
 
@@ -247,19 +248,19 @@ body {
 
 .grid-item.selected {
     border-color: #2effb0;
-    box-shadow: 0 0 15px #00ffaa;
-    transform: scale(0.98);
+    box-shadow: 0 0 12px #00ffaa;
+    transform: scale(0.97);
 }
 
 .grid-item.selected::after {
     content: "✓";
     position: absolute;
-    top: 5px;
-    right: 8px;
+    top: 4px;
+    right: 6px;
     color: #2effb0;
-    font-size: 22px;
+    font-size: 18px;
     font-weight: bold;
-    text-shadow: 0 0 5px #00aa66;
+    text-shadow: 0 0 4px #00aa66;
     pointer-events: none;
 }
 
