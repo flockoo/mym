@@ -360,7 +360,7 @@ function attemptGlobalValidation() {
         return false;
     }
     if (isFlorentOk && !isRecaptchaChecked) {
-        errorMsgSpan.innerText = "❌ Coche « I'm not a robot ».";
+        errorMsgSpan.innerText = "❌ Coche « I'm not a zgeg ».";
         return false;
     }
     if (!isFlorentOk && !isRecaptchaChecked) {
