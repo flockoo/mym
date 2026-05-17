@@ -1,18 +1,9 @@
 // FICHIER: script.js
 // Configuration - METS ICI LE CHEMIN DE TA PHOTO !
 const MY_PHOTO_URL = "moi.jpg";  // <--- TA PHOTO ICI
-
-// Configuration de la grille (4x4 = 16 cases)
 const GRID_SIZE = 4;  // 4x4 grid
-const TOTAL_CELLS = GRID_SIZE * GRID_SIZE; // 16
-
-// Définis quelles cases contiennent TA TÊTE / VISAGE (toi)
-// Par défaut: les cases centrales (exemple pour une photo centrée)
-// Tu peux ajuster ces indices (0 à 15) selon où tu apparais sur ta photo
-// Case 0 = en haut à gauche, case 15 = en bas à droite
-const CORRECT_POSITIONS = [5, 6, 9, 10];  // zone centrale 2x2
-
-
+const TOTAL_CELLS = GRID_SIZE * GRID_SIZE; 
+const CORRECT_POSITIONS = [5, 6, 9, 10];  
 
 
 // ---------- CANVAS BACKGROUND (inchangé) ----------
