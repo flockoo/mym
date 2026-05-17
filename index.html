@@ -1,256 +1,631 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>human verification</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>I'M NOT A ROBOT — version Florent</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
 
-<style>
-html, body{
-    margin:0;
-    overflow:hidden;
-    background:black;
-    font-family:monospace;
-    color:white;
-}
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at 20% 30%, #0a0f1a 0%, #030507 100%);
+            font-family: 'Courier New', 'SF Mono', 'Fira Code', monospace;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow-x: hidden;
+        }
 
-canvas{
-    position:fixed;
-    inset:0;
-}
+        /* canvas background dynamique */
+        #bgCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+            z-index: 0;
+            pointer-events: none;
+        }
 
-.center{
-    position:absolute;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%);
-    width:340px;
-}
+        /* conteneur principal 3 étapes */
+        .steps-container {
+            position: relative;
+            z-index: 20;
+            width: 100%;
+            max-width: 500px;
+            margin: 20px;
+            perspective: 800px;
+        }
 
-.panel{
-    border:1px solid #222;
-    background:rgba(255,255,255,0.03);
-    padding:24px;
-    backdrop-filter:blur(10px);
-}
+        /* carte commune */
+        .step-card {
+            background: rgba(10, 14, 23, 0.75);
+            backdrop-filter: blur(16px);
+            border-radius: 42px;
+            border: 1px solid rgba(0, 255, 200, 0.35);
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 255, 180, 0.2);
+            padding: 2rem 1.8rem;
+            transition: all 0.25s ease;
+            text-align: center;
+        }
 
-.title{
-    font-size:12px;
-    letter-spacing:2px;
-    margin-bottom:20px;
-}
+        .step-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 1.8rem;
+            border-bottom: 1px dashed rgba(0, 255, 200, 0.4);
+            padding-bottom: 0.8rem;
+        }
 
-.button{
-    border:1px solid #444;
-    padding:14px;
-    cursor:pointer;
-    transition:0.2s;
-    user-select:none;
-}
+        .step-badge {
+            font-size: 0.7rem;
+            background: #00cca322;
+            padding: 0.2rem 0.8rem;
+            border-radius: 40px;
+            letter-spacing: 1px;
+            color: #8effd4;
+            font-weight: bold;
+        }
 
-.button:hover{
-    background:#111;
-}
+        .step-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            color: #d0fff0;
+            text-shadow: 0 0 4px #00ffc3;
+        }
 
-.small{
-    margin-top:15px;
-    opacity:0.5;
-    font-size:11px;
-}
+        /* zone kaptcha (step1) */
+        .kaptcha-prompt {
+            background: #050a0e;
+            padding: 1rem;
+            border-radius: 24px;
+            margin: 1rem 0;
+            border: 1px solid #2affaa30;
+        }
 
-.hidden{
-    display:none;
-}
+        .kaptcha-question {
+            font-size: 1rem;
+            color: #bbffdd;
+            margin-bottom: 0.8rem;
+            font-family: monospace;
+        }
 
-.score{
-    font-size:48px;
-    margin:20px 0;
-}
+        .kaptcha-value {
+            font-size: 2.2rem;
+            font-weight: bold;
+            background: #00000066;
+            display: inline-block;
+            padding: 0.3rem 1.2rem;
+            border-radius: 40px;
+            letter-spacing: 6px;
+            color: #f0ffb0;
+            text-shadow: 0 0 5px #ffd966;
+            font-family: monospace;
+            border: 1px dashed #88ffaa;
+        }
 
-.glitch{
-    animation:glitch 0.15s infinite;
-}
+        .kaptcha-input {
+            margin: 1.2rem 0;
+        }
 
-@keyframes glitch{
-    0%{transform:translate(0px);}
-    25%{transform:translate(-2px,1px);}
-    50%{transform:translate(2px,-1px);}
-    75%{transform:translate(-1px,-2px);}
-    100%{transform:translate(0px);}
-}
-</style>
+        .kaptcha-input input {
+            width: 85%;
+            background: #0f1a1f;
+            border: 1.5px solid #2affaa;
+            padding: 12px 16px;
+            border-radius: 60px;
+            font-family: monospace;
+            font-size: 1.2rem;
+            text-align: center;
+            color: #eafff0;
+            outline: none;
+            transition: 0.2s;
+            letter-spacing: 1px;
+        }
+
+        .kaptcha-input input:focus {
+            border-color: #ffd966;
+            box-shadow: 0 0 12px #ffb347;
+            background: #071217;
+        }
+
+        .error-msg {
+            color: #ff7b72;
+            font-size: 0.7rem;
+            margin-top: 8px;
+            min-height: 30px;
+        }
+
+        /* boutons */
+        .action-btn {
+            background: rgba(0, 30, 25, 0.8);
+            border: 1.5px solid #22ffb0;
+            border-radius: 60px;
+            padding: 12px 24px;
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 1rem;
+            color: #ccffee;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 20px;
+            width: 80%;
+            letter-spacing: 2px;
+        }
+
+        .action-btn:hover {
+            background: #00ffaa22;
+            border-color: #fdffb9;
+            box-shadow: 0 0 12px #00ffaa;
+            transform: scale(0.98);
+        }
+
+        /* indicateur de progression */
+        .progress-dots {
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+            margin-top: 28px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #2c4a42;
+            transition: all 0.2s;
+            border: 1px solid #4affb0;
+        }
+
+        .dot.active {
+            background: #b5ffd0;
+            box-shadow: 0 0 12px #3eff9e;
+            transform: scale(1.2);
+        }
+
+        /* étape 2 / scanning */
+        .scan-animation {
+            font-size: 3rem;
+            margin: 20px 0;
+            letter-spacing: 8px;
+        }
+
+        .progress-bar-bg {
+            background: #0e1c1e;
+            border-radius: 40px;
+            height: 12px;
+            width: 100%;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #2effb0, #b5ff66);
+            border-radius: 40px;
+            transition: width 0.1s linear;
+        }
+
+        .scan-message {
+            font-size: 0.8rem;
+            color: #9effcf;
+            margin: 15px 0;
+            min-height: 55px;
+        }
+
+        /* étape 3 finale */
+        .final-message {
+            margin: 1rem 0;
+        }
+
+        .human-badge {
+            font-size: 3.5rem;
+            margin: 12px 0;
+            filter: drop-shadow(0 0 6px #0affb0);
+        }
+
+        .reset-link {
+            margin-top: 25px;
+            font-size: 0.7rem;
+            color: #66ccaa;
+            cursor: pointer;
+            text-decoration: underline;
+            opacity: 0.7;
+        }
+
+        .reset-link:hover {
+            opacity: 1;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @keyframes glitchBg {
+            0% { text-shadow: -1px 0 red; }
+            20% { text-shadow: 1px 0 cyan; }
+            40% { text-shadow: -1px 0 lime; }
+            60% { text-shadow: 1px 0 magenta; }
+            100% { text-shadow: 0px 0 transparent; }
+        }
+    </style>
 </head>
-
 <body>
 
-<canvas id="c"></canvas>
+<canvas id="bgCanvas"></canvas>
 
-<div class="center">
-
-    <div class="panel" id="startPanel">
-        <div class="title">
-            HUMAN VERIFICATION REQUIRED
+<div class="steps-container">
+    <!-- ÉTAPE 1 : écrire "Florent" comme un kaptcha -->
+    <div id="step1" class="step-card">
+        <div class="step-header">
+            <span class="step-badge">● ÉTAPE 1 / 3</span>
+            <span class="step-title">KAPTCHA</span>
         </div>
-
-        <div class="button" onclick="startVerification()">
-            [ I AM NOT A ROBOT ]
+        <div class="kaptcha-prompt">
+            <div class="kaptcha-question">✧ prouvez que vous n'êtes pas un robot ✧</div>
+            <div class="kaptcha-value">FLORENT</div>
         </div>
+        <div class="kaptcha-input">
+            <input type="text" id="kaptchaInput" placeholder="tapez ici" autocomplete="off" spellcheck="false">
+        </div>
+        <div id="errorMsg" class="error-msg"></div>
+        <button class="action-btn" id="validateStep1Btn">⟳ VÉRIFIER ⟳</button>
+        <div class="progress-dots">
+            <div class="dot active"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+        <div class="footnote" style="font-size:0.6rem; margin-top:1rem;">pas de robot ? écrivez Florent exactement</div>
+    </div>
 
-        <div class="small">
-            biometric imagination scanner enabled
+    <!-- ÉTAPE 2 : scan biométrique / imagination -->
+    <div id="step2" class="step-card hidden">
+        <div class="step-header">
+            <span class="step-badge">⚡ ÉTAPE 2 / 3</span>
+            <span class="step-title">SCAN HUMain</span>
+        </div>
+        <div class="scan-animation" id="scanIcon">◈ ◈ ◈</div>
+        <div class="progress-bar-bg">
+            <div class="progress-fill" id="scanFill"></div>
+        </div>
+        <div id="scanMessage" class="scan-message">initialisation du détecteur d'âme...</div>
+        <div id="step2loader" style="font-size:0.7rem; opacity:0.7;">analyse des traces émotionnelles</div>
+        <div class="progress-dots" style="margin-top: 20px;">
+            <div class="dot"></div>
+            <div class="dot active"></div>
+            <div class="dot"></div>
         </div>
     </div>
 
-    <div class="panel hidden" id="scanPanel">
-        <div class="title glitch">
-            SCANNING HUMANITY...
+    <!-- ÉTAPE 3 : validation finale humanité -->
+    <div id="step3" class="step-card hidden">
+        <div class="step-header">
+            <span class="step-badge">✓ VÉRIFIÉ ✓</span>
+            <span class="step-title">HUMANITÉ ACCORDÉE</span>
         </div>
-
-        <div class="score" id="score">
-            0%
+        <div class="final-message">
+            <div class="human-badge" id="humanIcon">🧬✨</div>
+            <div id="welcomeText" style="font-size:1.3rem; font-weight:bold; margin:12px 0;">Bienvenue, Florent</div>
+            <p style="font-size:0.8rem; opacity:0.9;">Vous avez prouvé votre essence humaine.<br>Ce n'est pas un robot, c'est VOUS.</p>
+            <div style="margin: 20px 0; font-size:0.75rem; background:#0e1e18; border-radius:60px; padding:8px;">✅ accès neuronal accordé</div>
         </div>
-
-        <div class="small" id="analysis">
-            analyzing emotional residue...
+        <button class="action-btn" id="resetBtn" style="background:#11221e;">⟳ RECOMMENCER L'ÉPREUVE</button>
+        <div class="progress-dots">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot active"></div>
         </div>
+        <div class="footnote">version "Je ne suis pas un robot — moi"</div>
     </div>
-
 </div>
 
 <script>
-const canvas = document.getElementById("c");
-const ctx = canvas.getContext("2d");
+    (function() {
+        // ---------- canvas background dynamique (style digital / particules subtiles) ----------
+        const canvas = document.getElementById("bgCanvas");
+        const ctx = canvas.getContext("2d");
+        let width, height;
+        let particles = [];
+        let mouseX = 0, mouseY = 0;
+        let time = 0;
 
-let w,h;
-
-function resize(){
-    w = canvas.width = innerWidth;
-    h = canvas.height = innerHeight;
-}
-
-addEventListener("resize", resize);
-resize();
-
-let mouse = {
-    x:w/2,
-    y:h/2
-};
-
-addEventListener("mousemove", e=>{
-    mouse.x = e.clientX;
-    mouse.y = e.clientY;
-});
-
-let t = 0;
-
-function draw(){
-
-    ctx.fillStyle = "rgba(0,0,0,0.08)";
-    ctx.fillRect(0,0,w,h);
-
-    for(let i=0;i<120;i++){
-
-        let angle = i*0.15 + t*0.01;
-
-        let radius =
-            150 +
-            Math.sin(i*0.5+t*0.02)*40;
-
-        let x =
-            mouse.x +
-            Math.cos(angle)*radius;
-
-        let y =
-            mouse.y +
-            Math.sin(angle)*radius;
-
-        ctx.beginPath();
-        ctx.arc(x,y,1.8,0,Math.PI*2);
-
-        ctx.fillStyle =
-            `hsl(${i*4+t},100%,60%)`;
-
-        ctx.fill();
-    }
-
-    t++;
-
-    requestAnimationFrame(draw);
-}
-
-draw();
-
-const messages = [
-    "detecting internet soul...",
-    "measuring curiosity...",
-    "checking meme history...",
-    "analyzing emotional residue...",
-    "verifying late night thoughts...",
-    "scanning digital aura...",
-    "testing humanity levels...",
-    "checking existential instability...",
-    "reading browser fingerprints...",
-    "calculating weirdness factor..."
-];
-
-function random(min,max){
-    return Math.floor(Math.random()*(max-min+1))+min;
-}
-
-function startVerification(){
-
-    document
-        .getElementById("startPanel")
-        .classList.add("hidden");
-
-    document
-        .getElementById("scanPanel")
-        .classList.remove("hidden");
-
-    let score = 0;
-
-    const finalScore = random(72, 99);
-
-    const scoreElement =
-        document.getElementById("score");
-
-    const analysis =
-        document.getElementById("analysis");
-
-    const interval = setInterval(()=>{
-
-        score += random(1,4);
-
-        if(score >= finalScore){
-            score = finalScore;
-
-            clearInterval(interval);
-
-            setTimeout(()=>{
-
-                analysis.innerHTML =
-                    "human verified.";
-
-                document
-                    .querySelector(".title")
-                    .classList.remove("glitch");
-
-            },500);
-
+        function resizeCanvas() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener("resize", () => {
+            resizeCanvas();
+            initParticles();
+        });
+        
+        function initParticles() {
+            particles = [];
+            const particleCount = Math.min(120, Math.floor(width * height / 8000));
+            for (let i = 0; i < particleCount; i++) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    radius: Math.random() * 2 + 1,
+                    alpha: Math.random() * 0.5 + 0.2,
+                    speedX: (Math.random() - 0.5) * 0.3,
+                    speedY: (Math.random() - 0.5) * 0.2,
+                    colorHue: Math.random() * 60 + 140, // teinte vert/cyan
+                });
+            }
         }
 
-        scoreElement.innerHTML =
-            score + "%";
+        function drawBackground() {
+            if (!ctx) return;
+            ctx.fillStyle = "#03060b";
+            ctx.fillRect(0, 0, width, height);
+            
+            // lignes de grille douce
+            ctx.strokeStyle = "#00ffaa20";
+            ctx.lineWidth = 0.5;
+            const step = 45;
+            for (let i = 0; i < width + step; i += step) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, height);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(0, i % height);
+                ctx.lineTo(width, i % height);
+                ctx.stroke();
+            }
+            
+            // particules mouvantes + connexions
+            for (let p of particles) {
+                p.x += p.speedX + (mouseX - width/2) * 0.0008;
+                p.y += p.speedY + (mouseY - height/2) * 0.0006;
+                if (p.x < -20) p.x = width + 20;
+                if (p.x > width + 20) p.x = -20;
+                if (p.y < -20) p.y = height + 20;
+                if (p.y > height + 20) p.y = -20;
+                
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `hsla(${p.colorHue + time * 0.5}, 80%, 65%, ${p.alpha * 0.7})`;
+                ctx.fill();
+            }
+            
+            // petites traînées autour de la souris
+            for (let i = 0; i < 12; i++) {
+                let angle = Date.now() * 0.008 + i;
+                let rad = 18 + Math.sin(angle) * 6;
+                let x = mouseX + Math.cos(angle + time * 0.02) * rad;
+                let y = mouseY + Math.sin(angle * 1.3 + time * 0.02) * rad;
+                ctx.beginPath();
+                ctx.arc(x, y, 1.2, 0, Math.PI*2);
+                ctx.fillStyle = `rgba(80, 255, 180, 0.4)`;
+                ctx.fill();
+            }
+            time++;
+            requestAnimationFrame(drawBackground);
+        }
+        
+        function updateMouse(e) {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        }
+        window.addEventListener("mousemove", updateMouse);
+        resizeCanvas();
+        initParticles();
+        drawBackground();
 
-        analysis.innerHTML =
-            messages[
-                random(0,messages.length-1)
-            ];
-
-    },80);
-
-}
+        // ---------- GESTION DES 3 ÉTAPES ----------
+        const step1Div = document.getElementById("step1");
+        const step2Div = document.getElementById("step2");
+        const step3Div = document.getElementById("step3");
+        const validateBtn = document.getElementById("validateStep1Btn");
+        const kaptchaInput = document.getElementById("kaptchaInput");
+        const errorMsgSpan = document.getElementById("errorMsg");
+        const resetAllBtn = document.getElementById("resetBtn");
+        
+        // Étape 2 éléments
+        const scanFill = document.getElementById("scanFill");
+        const scanMessageSpan = document.getElementById("scanMessage");
+        const scanIconSpan = document.getElementById("scanIcon");
+        
+        // Étape 3 texte personnalisé (déjà 'Florent')
+        const welcomeTextSpan = document.getElementById("welcomeText");
+        
+        let scanInterval = null;
+        let currentScanProgress = 0;
+        let scanMessages = [
+            "analyse des ondes cérébrales...",
+            "détection de curiosité organique...",
+            "lecture des cicatrices émotionnelles...",
+            "vérification du sens de l'humour...",
+            "scan des rêves nocturnes...",
+            "recherche d'empathie résiduelle...",
+            "test des contradictions humaines...",
+            "empreinte de l'inconscient détectée...",
+            "confirmation : vous n'êtes pas un algorithme..."
+        ];
+        
+        // Fonction pour réinitialiser proprement
+        function fullReset() {
+            // arrêter le scan si actif
+            if (scanInterval) {
+                clearInterval(scanInterval);
+                scanInterval = null;
+            }
+            // remettre étapes visibles
+            step1Div.classList.remove("hidden");
+            step2Div.classList.add("hidden");
+            step3Div.classList.add("hidden");
+            // reset input + erreur
+            kaptchaInput.value = "";
+            errorMsgSpan.innerText = "";
+            // reset scan progress
+            currentScanProgress = 0;
+            if (scanFill) scanFill.style.width = "0%";
+            if (scanMessageSpan) scanMessageSpan.innerText = "initialisation du détecteur d'âme...";
+            if (scanIconSpan) scanIconSpan.innerHTML = "◈ ◈ ◈";
+            // remettre les dots à jour (visuel)
+            updateDots(1);
+        }
+        
+        function updateDots(step) {
+            // pas obligatoire mais sympa pour synchroniser les dot actives (parcours simple)
+            const allDots = document.querySelectorAll(".progress-dots .dot");
+            if (allDots.length === 9) { // trois groupes * 3 -> mais mieux: on cible les dots du container visible?
+                // gestion plus robuste : on change les classes à l'intérieur de chaque carte manuellement
+            }
+            // On applique pour chaque carte séparément:
+            const dotsStep1 = step1Div.querySelectorAll(".progress-dots .dot");
+            const dotsStep2 = step2Div.querySelectorAll(".progress-dots .dot");
+            const dotsStep3 = step3Div.querySelectorAll(".progress-dots .dot");
+            function setActive(dots, activeIndex) {
+                dots.forEach((dot, idx) => {
+                    if (idx === activeIndex) dot.classList.add("active");
+                    else dot.classList.remove("active");
+                });
+            }
+            if (step === 1) {
+                setActive(dotsStep1, 0);
+                setActive(dotsStep2, 0);
+                setActive(dotsStep3, 0);
+            } else if (step === 2) {
+                setActive(dotsStep1, 1);
+                setActive(dotsStep2, 1);
+                setActive(dotsStep3, 1);
+            } else if (step === 3) {
+                setActive(dotsStep1, 2);
+                setActive(dotsStep2, 2);
+                setActive(dotsStep3, 2);
+            }
+        }
+        
+        // validation étape 1 : écrire "Florent" (insensible à la casse mais respect visuel)
+        function validateStep1() {
+            const userInput = kaptchaInput.value.trim();
+            if (userInput.toLowerCase() === "florent") {
+                // succès -> passer à l'étape 2
+                errorMsgSpan.innerText = "";
+                step1Div.classList.add("hidden");
+                step2Div.classList.remove("hidden");
+                updateDots(2);
+                startScanAnimation();
+            } else {
+                errorMsgSpan.innerText = "❌ échec de vérification. Vous devez écrire exactement « Florent ».";
+                kaptchaInput.style.borderColor = "#ff6666";
+                setTimeout(() => { kaptchaInput.style.borderColor = "#2affaa"; }, 800);
+            }
+        }
+        
+        // animation étape 2 (scan progressif)
+        function startScanAnimation() {
+            if (scanInterval) clearInterval(scanInterval);
+            currentScanProgress = 0;
+            scanFill.style.width = "0%";
+            let msgIndex = 0;
+            let glitchInterval = null;
+            
+            // animation de l'icône
+            let iconFrames = ["◈ ◈ ◈", "◎ ◈ ◎", "⚡ ◈ ⚡", "◈ ❖ ◈", "◈ ◈ ◈"];
+            let iconIdx = 0;
+            if (scanIconSpan) {
+                glitchInterval = setInterval(() => {
+                    iconIdx = (iconIdx + 1) % iconFrames.length;
+                    scanIconSpan.innerHTML = iconFrames[iconIdx];
+                }, 220);
+            }
+            
+            scanInterval = setInterval(() => {
+                // progression aléatoire + naturelle
+                let increment = Math.floor(Math.random() * 7) + 3; // 3-9%
+                currentScanProgress = Math.min(currentScanProgress + increment, 100);
+                scanFill.style.width = currentScanProgress + "%";
+                
+                // message aléatoire parmi scanMessages
+                if (msgIndex < scanMessages.length) {
+                    let randomMsg = scanMessages[Math.floor(Math.random() * scanMessages.length)];
+                    scanMessageSpan.innerHTML = randomMsg + "  " + "•".repeat(Math.floor(Math.random() * 3) + 1);
+                } else {
+                    scanMessageSpan.innerHTML = "analyse comportementale avancée...";
+                }
+                msgIndex++;
+                
+                // effets sonores fictifs (vibration douce)
+                if (currentScanProgress >= 35 && currentScanProgress < 40) {
+                    scanMessageSpan.innerHTML = "🔍 détection du prénom « Florent » dans la matrice cognitive ...";
+                }
+                if (currentScanProgress >= 70) {
+                    scanMessageSpan.innerHTML = "✅ authenticité humaine confirmée — dernières vérifications";
+                }
+                
+                if (currentScanProgress >= 100) {
+                    clearInterval(scanInterval);
+                    if (glitchInterval) clearInterval(glitchInterval);
+                    scanFill.style.width = "100%";
+                    scanMessageSpan.innerHTML = "✔ SCAN COMPLET : ENTITÉ HUMAINE VALIDÉE";
+                    // passage à l'étape 3 après un court délai
+                    setTimeout(() => {
+                        step2Div.classList.add("hidden");
+                        step3Div.classList.remove("hidden");
+                        updateDots(3);
+                        // personnalisation finale : afficher un petit message avec Florent
+                        welcomeTextSpan.innerHTML = "Bienvenue, Florent ✨";
+                        const humanIconSpan = document.getElementById("humanIcon");
+                        if (humanIconSpan) humanIconSpan.innerHTML = "🧠💚🫀";
+                        // petit effet de clignotement sur le titre
+                    }, 800);
+                }
+            }, 95);
+        }
+        
+        // Événements
+        validateBtn.addEventListener("click", validateStep1);
+        kaptchaInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") validateStep1();
+        });
+        
+        resetAllBtn.addEventListener("click", () => {
+            if (scanInterval) clearInterval(scanInterval);
+            fullReset();
+        });
+        
+        // si jamais l'utilisateur termine étape 2 et veut reset manuellement on gère aussi via le bouton reset
+        // prévenir les bugs d'intervalle
+        window.fullReset = fullReset;
+        
+        // petit effet glitch sur le titre kaptcha
+        const kaptchaValueDiv = document.querySelector(".kaptcha-value");
+        if (kaptchaValueDiv) {
+            setInterval(() => {
+                if (step1Div && !step1Div.classList.contains("hidden")) {
+                    kaptchaValueDiv.style.transform = `skew(${Math.sin(Date.now() * 0.015) * 1.5}deg)`;
+                } else {
+                    kaptchaValueDiv.style.transform = "skew(0deg)";
+                }
+            }, 300);
+        }
+        
+        // gestion responsive + focus sur input
+        kaptchaInput.focus();
+        
+        // petite touche "scan aura" pour la souris sur le canvas (déjà incluse)
+        // On evite les fuites mémoire
+        document.body.style.overflow = "hidden";
+        
+        // initialisation des dots
+        updateDots(1);
+        
+        // Vérifier si reset externe
+    })();
 </script>
-
 </body>
 </html>
