@@ -1,5 +1,5 @@
-// FICHIER: script.js
-
+// FICHIER: script.js (version complète avec Kaptcha "wiggle")
+// Configuration
 const MY_PHOTO_URL = "moi.jpg";
 const GRID_SIZE = 4;
 const TOTAL_CELLS = GRID_SIZE * GRID_SIZE;
@@ -105,6 +105,45 @@ const verifyMsgSpan = document.getElementById("recaptchaVerifyMsg");
 let isRecaptchaChecked = false;
 let waitingForValidation = false;
 
+// Animation du Kaptcha "wiggle"
+const kaptchaValueElement = document.getElementById("kaptchaValue");
+let kaptchaAnimationInterval = null;
+
+function startKaptchaWiggle() {
+    if (kaptchaAnimationInterval) clearInterval(kaptchaAnimationInterval);
+    
+    kaptchaAnimationInterval = setInterval(() => {
+        if (!step1Div.classList.contains("hidden") && kaptchaValueElement) {
+            // Effet de déformation aléatoire
+            const skewX = (Math.sin(Date.now() * 0.008) * 3).toFixed(1);
+            const skewY = (Math.cos(Date.now() * 0.007) * 2).toFixed(1);
+            const rotate = (Math.sin(Date.now() * 0.01) * 1.5).toFixed(1);
+            const translateX = (Math.sin(Date.now() * 0.015) * 2).toFixed(1);
+            const translateY = (Math.cos(Date.now() * 0.012) * 1.5).toFixed(1);
+            
+            kaptavaValueElement.style.transform = `skew(${skewX}deg, ${skewY}deg) rotate(${rotate}deg) translate(${translateX}px, ${translateY}px)`;
+            
+            // Légère variation de couleur
+            const hue = 55 + Math.sin(Date.now() * 0.01) * 10;
+            kaptchaValueElement.style.textShadow = `0 0 3px hsl(${hue}, 100%, 60%)`;
+            kaptchaValueElement.style.color = `hsl(${hue}, 80%, 65%)`;
+        }
+    }, 100);
+}
+
+// Arrêter l'animation quand on quitte l'étape 1
+function stopKaptchaWiggle() {
+    if (kaptchaAnimationInterval) {
+        clearInterval(kaptchaAnimationInterval);
+        kaptchaAnimationInterval = null;
+    }
+    if (kaptchaValueElement) {
+        kaptchaValueElement.style.transform = "";
+        kaptchaValueElement.style.textShadow = "";
+        kaptchaValueElement.style.color = "";
+    }
+}
+
 // Grille étape 2
 const imageGrid = document.getElementById("imageGrid");
 const verifyGridBtn = document.getElementById("verifyGridBtn");
@@ -112,7 +151,6 @@ const gridError = document.getElementById("gridError");
 let selectedCells = new Set();
 let gridItems = [];
 
-// Afficher combien de cases sont attendues (pour l'utilisateur)
 function updateGridPrompt() {
     const promptDiv = document.querySelector(".grid-prompt p");
     if (promptDiv) {
@@ -120,7 +158,6 @@ function updateGridPrompt() {
     }
 }
 
-// Fonction pour charger l'image
 function loadImage() {
     return new Promise((resolve, reject) => {
         const img = new Image();
@@ -130,13 +167,11 @@ function loadImage() {
     });
 }
 
-// Découpe l'image et crée les cellules
 async function generateGridFromPhoto() {
     imageGrid.innerHTML = "";
     selectedCells.clear();
     gridItems = [];
     
-    // Style optimisé pour la grille
     imageGrid.style.display = "grid";
     imageGrid.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 1fr)`;
     imageGrid.style.gap = "4px";
@@ -146,8 +181,6 @@ async function generateGridFromPhoto() {
     
     try {
         const img = await loadImage();
-        
-        // Calcul pour un découpage carré centré
         const imgSize = Math.min(img.width, img.height);
         const cropX = (img.width - imgSize) / 2;
         const cropY = (img.height - imgSize) / 2;
@@ -193,7 +226,6 @@ async function generateGridFromPhoto() {
         updateGridPrompt();
     } catch (error) {
         console.error("Erreur:", error);
-        // Fallback avec des carrés colorés
         for (let i = 0; i < TOTAL_CELLS; i++) {
             const isCorrect = CORRECT_POSITIONS.includes(i);
             const cellDiv = document.createElement("div");
@@ -212,7 +244,7 @@ async function generateGridFromPhoto() {
             imageGrid.appendChild(cellDiv);
             gridItems.push(cellDiv);
         }
-        gridError.innerText = "⚠️ Photo 'moi.jpg' introuvable. Placez-la à la racine du dossier.";
+        gridError.innerText = "⚠️ Photo 'moi.jpg' introuvable. Placez-la à la racine.";
         updateGridPrompt();
     }
 }
@@ -222,15 +254,9 @@ function toggleSelect(index, element) {
         selectedCells.delete(index);
         element.classList.remove("selected");
     } else {
-        // On peut limiter la sélection au nombre de cases attendues (optionnel)
-        // if (selectedCells.size >= CORRECT_POSITIONS.length && !CORRECT_POSITIONS.includes(index)) {
-        //     gridError.innerText = `⚠️ Vous devez sélectionner exactement ${CORRECT_POSITIONS.length} cases.`;
-        //     return;
-        // }
         selectedCells.add(index);
         element.classList.add("selected");
     }
-    // Efface l'erreur quand l'utilisateur modifie sa sélection
     gridError.innerText = "";
 }
 
@@ -239,12 +265,12 @@ function verifyGridSelection() {
     const expected = [...CORRECT_POSITIONS].sort((a,b)=>a-b);
     
     if (selectedArray.length !== expected.length) {
-        gridError.innerText = `❌ Sélection incorrecte ! Vous avez sélectionné ${selectedArray.length} case(s) au lieu de ${expected.length}.`;
+        gridError.innerText = `❌ Sélection incorrecte ! ${selectedArray.length}/${expected.length} cases.`;
         return false;
     }
     
     if (!selectedArray.every((val, idx) => val === expected[idx])) {
-        gridError.innerText = `❌ Sélection incorrecte ! Ce ne sont pas les bonnes cases. Recliquez sur celles où APPARAÎT MA PHOTO.`;
+        gridError.innerText = `❌ Mauvaises cases. Sélectionnez celles où APPARAÎT MA PHOTO.`;
         return false;
     }
     
@@ -262,21 +288,20 @@ function goToStep3() {
     if (humanIconSpan) humanIconSpan.innerHTML = "🧠💚🫀";
 }
 
-// ÉTAPE 1
 function attemptGlobalValidation() {
     const userInput = kaptchaInput.value.trim();
     const isFlorentOk = (userInput.toLowerCase() === "florent");
     
     if (!isFlorentOk && isRecaptchaChecked) {
-        errorMsgSpan.innerText = "❌ Le mot 'Florent' est incorrect.";
+        errorMsgSpan.innerText = "❌ Le code visuel est incorrect.";
         return false;
     }
     if (isFlorentOk && !isRecaptchaChecked) {
-        errorMsgSpan.innerText = "❌ Vous devez cocher « I'm not a robot ».";
+        errorMsgSpan.innerText = "❌ Cochez « I'm not a robot ».";
         return false;
     }
     if (!isFlorentOk && !isRecaptchaChecked) {
-        errorMsgSpan.innerText = "❌ Écrivez 'Florent' et cochez la case.";
+        errorMsgSpan.innerText = "❌ Recopiez le code ci-dessus et cochez la case.";
         return false;
     }
     
@@ -284,9 +309,10 @@ function attemptGlobalValidation() {
     waitingForValidation = true;
     recaptchaBox.style.pointerEvents = "none";
     recaptchaBox.style.opacity = "0.9";
-    verifyMsgSpan.innerHTML = "✓ humanité confirmée, passage à l'épreuve photo...";
+    verifyMsgSpan.innerHTML = "✓ Vérifié, passage à l'épreuve photo...";
     
     setTimeout(() => {
+        stopKaptchaWiggle();
         step1Div.classList.add("hidden");
         step2Div.classList.remove("hidden");
         updateDots(2);
@@ -303,9 +329,9 @@ function checkBothConditions() {
         attemptGlobalValidation();
     } else {
         if (inputOk && !isRecaptchaChecked) {
-            errorMsgSpan.innerText = "✔ Bon mot ! Cochez maintenant 'I'm not a robot'.";
+            errorMsgSpan.innerText = "✔ Code correct ! Cochez la case.";
         } else if (!inputOk && isRecaptchaChecked) {
-            errorMsgSpan.innerText = "✔ Case validée, mais écrivez exactement 'Florent'.";
+            errorMsgSpan.innerText = "✔ Case cochée, mais recopiez exactement 'FLORENT'.";
         } else {
             if (!waitingForValidation) errorMsgSpan.innerText = "";
         }
@@ -334,7 +360,7 @@ recaptchaBox.addEventListener("click", (e) => {
     isRecaptchaChecked = !isRecaptchaChecked;
     updateCheckboxUI();
     if (isRecaptchaChecked) {
-        verifyMsgSpan.innerHTML = "vérification en cours... <span class='loading-spinner-small'></span>";
+        verifyMsgSpan.innerHTML = "vérification... <span class='loading-spinner-small'></span>";
         setTimeout(() => {
             if (isRecaptchaChecked) {
                 verifyMsgSpan.innerHTML = "✔ vérification humaine effectuée";
@@ -393,10 +419,13 @@ function fullReset() {
     updateDots(1);
     kaptchaInput.focus();
     gridError.innerText = "";
+    startKaptchaWiggle();
 }
 
 resetBtn.addEventListener("click", fullReset);
 
+// Démarrer l'animation du Kaptcha au chargement
+startKaptchaWiggle();
 updateCheckboxUI();
 updateDots(1);
 kaptchaInput.focus();
