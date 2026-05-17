@@ -348,7 +348,7 @@ function goToStep3() {
     const welcomeSpan = document.getElementById("welcomeText");
     if (welcomeSpan) welcomeSpan.innerHTML = "Bienvenue, Florent ✨";
     const humanIconSpan = document.getElementById("humanIcon");
-    if (humanIconSpan) humanIconSpan.innerHTML = "🧠💚🫀";
+    if (humanIconSpan) humanIconSpan.innerHTML = "🧠🫀";
 }
 
 function attemptGlobalValidation() {
