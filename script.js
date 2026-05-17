@@ -1,12 +1,10 @@
 // FICHIER: script.js
-// Configuration - METS ICI LE CHEMIN DE TA PHOTO !
-const MY_PHOTO_URL = "moi.jpg";  // <--- TA PHOTO ICI
-const GRID_SIZE = 4;  // 4x4 grid
-const TOTAL_CELLS = GRID_SIZE * GRID_SIZE; 
+const MY_PHOTO_URL = "moi.jpg";  
+const GRID_SIZE = 4;  
+const TOTAL_CELLS = GRID_SIZE * GRID_SIZE;
 const CORRECT_POSITIONS = [5, 6, 9, 10];  
 
-
-// ---------- CANVAS BACKGROUND (inchangé) ----------
+// ---------- CANVAS BACKGROUND ----------
 const canvas = document.getElementById("bgCanvas");
 const ctx = canvas.getContext("2d");
 let width, height;
@@ -106,67 +104,84 @@ const verifyMsgSpan = document.getElementById("recaptchaVerifyMsg");
 let isRecaptchaChecked = false;
 let waitingForValidation = false;
 
-// Grille étape 2 (photo découpée)
+// Grille étape 2
 const imageGrid = document.getElementById("imageGrid");
 const verifyGridBtn = document.getElementById("verifyGridBtn");
 const gridError = document.getElementById("gridError");
 let selectedCells = new Set();
 let gridItems = [];
 
-// Fonction pour charger une image et la découper en grille
-function loadAndSplitImage() {
+// Fonction pour charger l'image
+function loadImage() {
     return new Promise((resolve, reject) => {
         const img = new Image();
-        img.crossOrigin = "Anonymous"; // pour éviter les problèmes CORS avec certaines images
         img.onload = () => resolve(img);
         img.onerror = () => reject(new Error("Impossible de charger l'image"));
         img.src = MY_PHOTO_URL;
     });
 }
 
-// Découpe l'image et crée les cellules de la grille
+// Découpe l'image et crée les cellules (version corrigée sans déformation)
 async function generateGridFromPhoto() {
     imageGrid.innerHTML = "";
     selectedCells.clear();
     gridItems = [];
     
-    // Style dynamique pour la grille
+    // Style optimisé pour la grille - espacement réduit
     imageGrid.style.display = "grid";
     imageGrid.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 1fr)`;
-    imageGrid.style.gap = "8px";
-    imageGrid.style.margin = "20px 0";
+    imageGrid.style.gap = "4px";  // Espacement réduit entre les cases
+    imageGrid.style.margin = "20px auto";
+    imageGrid.style.maxWidth = "450px";  // Taille maximale de la grille
+    imageGrid.style.aspectRatio = "1 / 1";  // La grille reste carrée
     
     try {
-        const img = await loadAndSplitImage();
-        const cellWidth = img.width / GRID_SIZE;
-        const cellHeight = img.height / GRID_SIZE;
+        const img = await loadImage();
+        
+        // Calcul des dimensions pour un découpage parfait sans déformation
+        // On prend la plus petite dimension pour garder un carré parfait
+        const imgSize = Math.min(img.width, img.height);
+        const cropX = (img.width - imgSize) / 2;
+        const cropY = (img.height - imgSize) / 2;
+        
+        const cellSize = imgSize / GRID_SIZE;
         
         // Créer un canvas temporaire pour découper
         const tempCanvas = document.createElement("canvas");
         const tempCtx = tempCanvas.getContext("2d");
+        
+        // Définir une taille de cellule fixe pour l'affichage
+        const displayCellSize = 100; // pixels
         
         for (let row = 0; row < GRID_SIZE; row++) {
             for (let col = 0; col < GRID_SIZE; col++) {
                 const index = row * GRID_SIZE + col;
                 const isCorrect = CORRECT_POSITIONS.includes(index);
                 
-                // Découper le morceau
-                tempCanvas.width = cellWidth;
-                tempCanvas.height = cellHeight;
+                // Découper le morceau depuis la partie centrée de l'image
+                tempCanvas.width = cellSize;
+                tempCanvas.height = cellSize;
                 tempCtx.drawImage(
                     img,
-                    col * cellWidth, row * cellHeight, cellWidth, cellHeight,
-                    0, 0, cellWidth, cellHeight
+                    cropX + col * cellSize, cropY + row * cellSize, cellSize, cellSize,
+                    0, 0, cellSize, cellSize
                 );
                 
-                // Créer l'élément de la grille
+                // Créer l'élément de la grille avec une taille fixe
                 const cellDiv = document.createElement("div");
                 cellDiv.className = "grid-item";
                 cellDiv.dataset.index = index;
+                cellDiv.style.aspectRatio = "1 / 1";  // Cases carrées
+                cellDiv.style.cursor = "pointer";
+                cellDiv.style.borderRadius = "8px";
+                cellDiv.style.overflow = "hidden";
                 
                 const cellImg = document.createElement("img");
                 cellImg.src = tempCanvas.toDataURL();
                 cellImg.alt = isCorrect ? "Moi" : "Autre";
+                cellImg.style.width = "100%";
+                cellImg.style.height = "100%";
+                cellImg.style.objectFit = "cover";  // L'image remplit la case sans déformation
                 
                 cellDiv.appendChild(cellImg);
                 cellDiv.addEventListener("click", () => toggleSelect(index, cellDiv));
@@ -175,25 +190,27 @@ async function generateGridFromPhoto() {
             }
         }
     } catch (error) {
-        console.error("Erreur de chargement de l'image:", error);
-        // Fallback: générer des carrés colorés avec message d'erreur
+        console.error("Erreur:", error);
+        // Fallback
         for (let i = 0; i < TOTAL_CELLS; i++) {
             const isCorrect = CORRECT_POSITIONS.includes(i);
             const cellDiv = document.createElement("div");
             cellDiv.className = "grid-item";
             cellDiv.dataset.index = i;
             cellDiv.style.background = isCorrect ? "#2a5f4a" : "#1a1f2a";
+            cellDiv.style.aspectRatio = "1 / 1";
             cellDiv.style.display = "flex";
             cellDiv.style.alignItems = "center";
             cellDiv.style.justifyContent = "center";
             cellDiv.style.color = "#8effd4";
-            cellDiv.style.fontSize = "12px";
+            cellDiv.style.fontSize = "14px";
+            cellDiv.style.borderRadius = "8px";
             cellDiv.innerText = isCorrect ? "📷" : "?";
             cellDiv.addEventListener("click", () => toggleSelect(i, cellDiv));
             imageGrid.appendChild(cellDiv);
             gridItems.push(cellDiv);
         }
-        gridError.innerText = "⚠️ Photo non trouvée - Utilisation d'un aperçu temporaire. Placez votre photo dans assets/moi.jpg";
+        gridError.innerText = "⚠️ Placez votre photo dans assets/moi.jpg";
     }
 }
 
@@ -207,20 +224,18 @@ function toggleSelect(index, element) {
     }
 }
 
-// Vérification étape 2
 function verifyGridSelection() {
     const selectedArray = Array.from(selectedCells).sort((a,b)=>a-b);
     const expected = [...CORRECT_POSITIONS].sort((a,b)=>a-b);
     
     if (selectedArray.length !== expected.length || !selectedArray.every((val, idx) => val === expected[idx])) {
-        gridError.innerText = `❌ Sélection incorrecte ! Vous devez choisir les ${expected.length} carré(s) où APPARAÎT MON VISAGE.`;
+        gridError.innerText = `❌ Sélection incorrecte ! Choisissez les ${expected.length} carré(s) où JE APPARAIS.`;
         return false;
     }
     gridError.innerText = "✓ Parfait ! Humanité confirmée !";
     return true;
 }
 
-// Passage étape 2 -> étape 3
 function goToStep3() {
     step2Div.classList.add("hidden");
     step3Div.classList.remove("hidden");
@@ -231,7 +246,7 @@ function goToStep3() {
     if (humanIconSpan) humanIconSpan.innerHTML = "🧠💚🫀";
 }
 
-// ÉTAPE 1 : validation combinée
+// ÉTAPE 1
 function attemptGlobalValidation() {
     const userInput = kaptchaInput.value.trim();
     const isFlorentOk = (userInput.toLowerCase() === "florent");
@@ -259,12 +274,11 @@ function attemptGlobalValidation() {
         step1Div.classList.add("hidden");
         step2Div.classList.remove("hidden");
         updateDots(2);
-        generateGridFromPhoto(); // génère la grille découpée
+        generateGridFromPhoto();
     }, 600);
     return true;
 }
 
-// Écoute des changements
 function checkBothConditions() {
     if (waitingForValidation) return;
     const inputVal = kaptchaInput.value.trim();
@@ -282,7 +296,6 @@ function checkBothConditions() {
     }
 }
 
-// UI checkbox
 function updateCheckboxUI() {
     if (isRecaptchaChecked) {
         checkIcon.innerHTML = "✓";
@@ -329,7 +342,6 @@ verifyGridBtn.addEventListener("click", () => {
     }
 });
 
-// Dots progression
 function updateDots(step) {
     const dotsStep1 = step1Div.querySelectorAll(".progress-dots .dot");
     const dotsStep2 = step2Div.querySelectorAll(".progress-dots .dot");
@@ -349,7 +361,6 @@ function updateDots(step) {
     }
 }
 
-// Reset global
 function fullReset() {
     waitingForValidation = false;
     isRecaptchaChecked = false;
@@ -370,7 +381,6 @@ function fullReset() {
 
 resetBtn.addEventListener("click", fullReset);
 
-// Initialisation
 updateCheckboxUI();
 updateDots(1);
 kaptchaInput.focus();
