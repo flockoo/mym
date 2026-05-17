@@ -6,7 +6,7 @@ const MY_PHOTO_URL = "moi.jpg";  // <--- METS ICI LE CHEMIN DE TA PHOTO !
 
 // Position des images contenant ma photo dans la grille 3x3 (0 à 8)
 // PAR DÉFAUT: positions 1, 4, 7 (tu peux modifier)
-const CORRECT_POSITIONS = [1, 4, 7];
+const CORRECT_POSITIONS = [1, 3, 7];
 
 // ---------- CANVAS BACKGROUND ----------
 const canvas = document.getElementById("bgCanvas");
