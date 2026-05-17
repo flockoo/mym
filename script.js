@@ -1,4 +1,4 @@
-// FICHIER: script.js 
+// FICHIER: script.js
 // Configuration
 const MY_PHOTO_URL = "moi.jpg";
 const GRID_SIZE = 4;
@@ -105,43 +105,106 @@ const verifyMsgSpan = document.getElementById("recaptchaVerifyMsg");
 let isRecaptchaChecked = false;
 let waitingForValidation = false;
 
-// Animation du Kaptcha "wiggle"
-const kaptchaValueElement = document.getElementById("kaptchaValue");
-let kaptchaAnimationInterval = null;
-
-function startKaptchaWiggle() {
-    if (kaptchaAnimationInterval) clearInterval(kaptchaAnimationInterval);
+// Création du Captcha déformé sur canvas
+function drawWobblyCaptcha() {
+    const canvasCaptcha = document.getElementById("captchaCanvas");
+    if (!canvasCaptcha) return;
     
-    kaptchaAnimationInterval = setInterval(() => {
-        if (!step1Div.classList.contains("hidden") && kaptchaValueElement) {
-            // Effet de déformation aléatoire
-            const skewX = (Math.sin(Date.now() * 0.008) * 3).toFixed(1);
-            const skewY = (Math.cos(Date.now() * 0.007) * 2).toFixed(1);
-            const rotate = (Math.sin(Date.now() * 0.01) * 1.5).toFixed(1);
-            const translateX = (Math.sin(Date.now() * 0.015) * 2).toFixed(1);
-            const translateY = (Math.cos(Date.now() * 0.012) * 1.5).toFixed(1);
-            
-            kaptavaValueElement.style.transform = `skew(${skewX}deg, ${skewY}deg) rotate(${rotate}deg) translate(${translateX}px, ${translateY}px)`;
-            
-            // Légère variation de couleur
-            const hue = 55 + Math.sin(Date.now() * 0.01) * 10;
-            kaptchaValueElement.style.textShadow = `0 0 3px hsl(${hue}, 100%, 60%)`;
-            kaptchaValueElement.style.color = `hsl(${hue}, 80%, 65%)`;
-        }
-    }, 100);
-}
-
-// Arrêter l'animation quand on quitte l'étape 1
-function stopKaptchaWiggle() {
-    if (kaptchaAnimationInterval) {
-        clearInterval(kaptchaAnimationInterval);
-        kaptchaAnimationInterval = null;
+    const ctxCaptcha = canvasCaptcha.getContext("2d");
+    const text = "FLORENT";
+    
+    // Dimensions du canvas
+    canvasCaptcha.width = 350;
+    canvasCaptcha.height = 100;
+    
+    // Fond sale / bruité
+    ctxCaptcha.fillStyle = "#0a0f15";
+    ctxCaptcha.fillRect(0, 0, canvasCaptcha.width, canvasCaptcha.height);
+    
+    // Ajout de bruit (pixels aléatoires)
+    for (let i = 0; i < 300; i++) {
+        ctxCaptcha.fillStyle = `rgba(100, 255, 180, ${Math.random() * 0.3})`;
+        ctxCaptcha.fillRect(
+            Math.random() * canvasCaptcha.width,
+            Math.random() * canvasCaptcha.height,
+            1,
+            1
+        );
     }
-    if (kaptchaValueElement) {
-        kaptchaValueElement.style.transform = "";
-        kaptchaValueElement.style.textShadow = "";
-        kaptchaValueElement.style.color = "";
+    
+    // Lignes parasites
+    ctxCaptcha.beginPath();
+    for (let i = 0; i < 8; i++) {
+        ctxCaptcha.moveTo(Math.random() * canvasCaptcha.width, Math.random() * canvasCaptcha.height);
+        ctxCaptcha.lineTo(Math.random() * canvasCaptcha.width, Math.random() * canvasCaptcha.height);
+        ctxCaptcha.strokeStyle = `rgba(74, 255, 170, ${Math.random() * 0.3})`;
+        ctxCaptcha.lineWidth = 1;
+        ctxCaptcha.stroke();
     }
+    
+    // Dessiner chaque lettre avec déformation individuelle
+    const letters = text.split('');
+    let x = 30;
+    const y = 65;
+    const timeWobble = Date.now() / 200;
+    
+    letters.forEach((letter, index) => {
+        ctxCaptcha.save();
+        
+        // Déformation individuelle par lettre
+        const skewY = Math.sin(timeWobble + index * 0.8) * 0.5;
+        const skewX = Math.cos(timeWobble + index * 0.6) * 0.3;
+        const rotate = Math.sin(timeWobble + index) * 0.08;
+        const scaleY = 1 + Math.sin(timeWobble * 1.3 + index) * 0.05;
+        
+        // Position avec variation
+        const xOffset = Math.sin(timeWobble * 1.5 + index) * 3;
+        
+        ctxCaptcha.translate(x + xOffset, y);
+        ctxCaptcha.rotate(rotate);
+        ctxCaptcha.transform(1, skewY, skewX, scaleY, 0, 0);
+        
+        // Ombre pour effet "sale"
+        ctxCaptcha.shadowColor = "rgba(0, 255, 170, 0.3)";
+        ctxCaptcha.shadowBlur = 2;
+        
+        // Dégradé de couleur
+        const hue = 55 + Math.sin(timeWobble * 2 + index) * 15;
+        ctxCaptcha.fillStyle = `hsl(${hue}, 85%, 60%)`;
+        ctxCaptcha.font = `bold ${42 + Math.sin(timeWobble + index) * 4}px "Courier New", monospace`;
+        ctxCaptcha.textAlign = "center";
+        ctxCaptcha.textBaseline = "middle";
+        ctxCaptcha.fillText(letter, 0, 0);
+        
+        // Contour pour effet "glitch"
+        ctxCaptcha.shadowBlur = 0;
+        ctxCaptcha.strokeStyle = `rgba(0, 255, 170, 0.5)`;
+        ctxCaptcha.lineWidth = 0.5;
+        ctxCaptcha.strokeText(letter, 0, 0);
+        
+        ctxCaptcha.restore();
+        
+        // Largeur approximative
+        x += 38;
+    });
+    
+    // Ajouter des lignes courbes par-dessus
+    ctxCaptcha.beginPath();
+    for (let i = 0; i < 3; i++) {
+        ctxCaptcha.moveTo(20, 30 + i * 20);
+        ctxCaptcha.quadraticCurveTo(
+            canvasCaptcha.width / 2,
+            20 + Math.sin(Date.now() / 500 + i) * 15,
+            canvasCaptcha.width - 20,
+            40 + i * 15
+        );
+        ctxCaptcha.strokeStyle = `rgba(74, 255, 170, 0.25)`;
+        ctxCaptcha.lineWidth = 1.5;
+        ctxCaptcha.stroke();
+    }
+    
+    // Appeler l'animation
+    requestAnimationFrame(() => drawWobblyCaptcha());
 }
 
 // Grille étape 2
@@ -301,7 +364,7 @@ function attemptGlobalValidation() {
         return false;
     }
     if (!isFlorentOk && !isRecaptchaChecked) {
-        errorMsgSpan.innerText = "❌ Recopiez le code ci-dessus et cochez la case.";
+        errorMsgSpan.innerText = "❌ Recopiez le code ci-dessus.";
         return false;
     }
     
@@ -312,7 +375,6 @@ function attemptGlobalValidation() {
     verifyMsgSpan.innerHTML = "✓ Vérifié, passage à l'épreuve photo...";
     
     setTimeout(() => {
-        stopKaptchaWiggle();
         step1Div.classList.add("hidden");
         step2Div.classList.remove("hidden");
         updateDots(2);
@@ -331,7 +393,7 @@ function checkBothConditions() {
         if (inputOk && !isRecaptchaChecked) {
             errorMsgSpan.innerText = "✔ Code correct ! Cochez la case.";
         } else if (!inputOk && isRecaptchaChecked) {
-            errorMsgSpan.innerText = "✔ Case cochée, mais recopiez exactement 'FLORENT'.";
+            errorMsgSpan.innerText = "✔ Case cochée, recopiez 'FLORENT'.";
         } else {
             if (!waitingForValidation) errorMsgSpan.innerText = "";
         }
@@ -344,7 +406,7 @@ function updateCheckboxUI() {
         checkIcon.style.background = "#2effb0";
         checkIcon.style.color = "#0a2b1f";
         recaptchaBox.classList.add("checked");
-        verifyMsgSpan.innerHTML = "✔ vérification humaine effectuée";
+        verifyMsgSpan.innerHTML = "✔ vérification effectuée";
     } else {
         checkIcon.innerHTML = "☐";
         checkIcon.style.background = "#0f1a1c";
@@ -363,7 +425,7 @@ recaptchaBox.addEventListener("click", (e) => {
         verifyMsgSpan.innerHTML = "vérification... <span class='loading-spinner-small'></span>";
         setTimeout(() => {
             if (isRecaptchaChecked) {
-                verifyMsgSpan.innerHTML = "✔ vérification humaine effectuée";
+                verifyMsgSpan.innerHTML = "✔ vérification effectuée";
                 attemptGlobalValidation();
             }
         }, 400);
@@ -419,13 +481,12 @@ function fullReset() {
     updateDots(1);
     kaptchaInput.focus();
     gridError.innerText = "";
-    startKaptchaWiggle();
 }
 
 resetBtn.addEventListener("click", fullReset);
 
-// Démarrer l'animation du Kaptcha au chargement
-startKaptchaWiggle();
+// Lancer le Captcha déformé
+drawWobblyCaptcha();
 updateCheckboxUI();
 updateDots(1);
 kaptchaInput.focus();
