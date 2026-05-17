@@ -323,7 +323,7 @@ function verifyGridSelection() {
         return false;
     }
     
-    gridError.innerText = "✓ Parfait ! Humanité confirmée !";
+    gridError.innerText = "✓ Magnifique !";
     return true;
 }
 
@@ -344,7 +344,7 @@ function goToStep3() {
                     CONFIRMÉ
                 </div>
                 <div style="margin-top: 30px; font-size: 0.7rem; color: #88ffcc;">
-                    Redirection vers Instagram dans <span id="countdown">3</span> secondes...
+                    Redirection vers mon Onlyfan dans <span id="countdown">3</span> secondes...
                 </div>
             </div>
         `;
