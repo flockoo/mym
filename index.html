@@ -11,21 +11,24 @@
 <canvas id="bgCanvas"></canvas>
 
 <div class="steps-container">
-    <!-- ÉTAPE 1 : KAPTCHA Florent + reCAPTCHA -->
+    <!-- ÉTAPE 1 : VRAI KAPTCHA DÉFORMÉ -->
     <div id="step1" class="step-card">
         <div class="step-header">
             <span class="step-badge">● ÉTAPE 1 / 3</span>
-            <span class="step-title">KAPTCHA</span>
+            <span class="step-title">CAPTCHA</span>
         </div>
-        <div class="kaptcha-prompt">
-            <div class="kaptcha-question">✧ prouvez que vous n'êtes pas un robot ✧</div>
-            <div class="kaptcha-value">FLORENT</div>
+        
+        <!-- Zone du Captcha déformé -->
+        <div class="captcha-container">
+            <canvas id="captchaCanvas" class="captcha-canvas"></canvas>
         </div>
-        <div class="kaptcha-input">
-            <input type="text" id="kaptchaInput" placeholder="tapez ici" autocomplete="off" spellcheck="false">
+        
+        <div class="captcha-input">
+            <input type="text" id="kaptchaInput" placeholder="Entrez le texte ci-dessus" autocomplete="off" spellcheck="false">
         </div>
         <div id="errorMsg" class="error-msg"></div>
         
+        <!-- Box I'm not a robot -->
         <div id="recaptchaBox" class="recaptcha-box">
             <div class="checkbox-area">
                 <div class="fake-checkbox" id="recaptchaCheckIcon">☐</div>
@@ -43,7 +46,7 @@
             <div class="dot"></div>
             <div class="dot"></div>
         </div>
-        <div class="footnote">✓ écrivez Florent + cochez la case humaine</div>
+        <div class="footnote">Recopiez le code déformé + case à cocher</div>
     </div>
 
     <!-- ÉTAPE 2 : sélectionner les carrés avec MA PHOTO -->
@@ -54,12 +57,9 @@
         </div>
         <div class="grid-prompt">
             <p>Sélectionnez tous les carrés où <strong style="color:#8effd4;">apparaît MA PHOTO</strong></p>
-            <p class="small-hint">(cliquez sur les images qui me contiennent)</p>
         </div>
         
-        <div class="image-grid" id="imageGrid">
-            <!-- Grille 3x3 générée par JS -->
-        </div>
+        <div class="image-grid" id="imageGrid"></div>
         
         <div id="gridError" class="error-msg" style="margin-top: 12px;"></div>
         <button class="action-btn" id="verifyGridBtn">✓ VÉRIFIER</button>
@@ -69,7 +69,7 @@
             <div class="dot active"></div>
             <div class="dot"></div>
         </div>
-        <div class="footnote">cliquez sur tous les blocs où je me trouve</div>
+        <div class="footnote">Cliquez sur tous les blocs où je me trouve</div>
     </div>
 
     <!-- ÉTAPE 3 : validation finale -->
@@ -84,7 +84,7 @@
             <p style="font-size:0.8rem; opacity:0.9;">Vous avez prouvé votre essence humaine.<br>Ce n'est pas un robot, c'est VOUS.</p>
             <div style="margin: 20px 0; font-size:0.75rem; background:#0e1e18; border-radius:60px; padding:8px;">✅ accès neuronal accordé</div>
         </div>
-        <button class="action-btn" id="resetBtn">⟳ RECOMMENCER L'ÉPREUVE</button>
+        <button class="action-btn" id="resetBtn">⟳ RECOMMENCER</button>
         <div class="progress-dots">
             <div class="dot"></div>
             <div class="dot"></div>
