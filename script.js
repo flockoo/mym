@@ -377,7 +377,7 @@ function attemptGlobalValidation() {
     const isFlorentOk = (userInput.toLowerCase() === "florent");
     
     if (!isFlorentOk && isRecaptchaChecked) {
-        errorMsgSpan.innerText = "❌ Ayyiii c'est quoi ce mongol";
+        errorMsgSpan.innerText = "❌ Ayyiii c'est quoi ce zgeg";
         return false;
     }
     if (isFlorentOk && !isRecaptchaChecked) {
@@ -414,7 +414,7 @@ function checkBothConditions() {
         if (inputOk && !isRecaptchaChecked) {
             errorMsgSpan.innerText = "✔ Bon toutou.";
         } else if (!inputOk && isRecaptchaChecked) {
-            errorMsgSpan.innerText = "recopie 'FLORENT' cogno.";
+            errorMsgSpan.innerText = "Branche ton cerveau stp.";
         } else {
             if (!waitingForValidation) errorMsgSpan.innerText = "";
         }
