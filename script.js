@@ -411,9 +411,7 @@ function checkBothConditions() {
     if (inputOk && isRecaptchaChecked) {
         attemptGlobalValidation();
     } else {
-        if (inputOk && !isRecaptchaChecked) {
-            errorMsgSpan.innerText = "✔ Bon toutou.";
-        } else if (!inputOk && isRecaptchaChecked) {
+        if (!inputOk && isRecaptchaChecked) {
             errorMsgSpan.innerText = "Branche ton cerveau stp.";
         } else {
             if (!waitingForValidation) errorMsgSpan.innerText = "";
